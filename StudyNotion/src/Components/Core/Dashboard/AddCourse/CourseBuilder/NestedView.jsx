@@ -5,6 +5,13 @@ import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import { BiSolidDownArrow } from "react-icons/bi";
 import { AiOutlinePlus } from "react-icons/ai";
+import SubSectionModal from "./SubSectionModal";
+import ConfirmationModal from "../../../../Common/ConfirmationModal";
+import { setCourse } from "../../../../../slices/courseSlice";
+import {
+  deleteSection,
+  deleteSubSection,
+} from "../../../../../services/operations/courseDetailsAPI";
 
 const NestedView = ({ handleChangeEditSectionName }) => {
   const { course } = useSelector((state) => state.course);
@@ -16,9 +23,31 @@ const NestedView = ({ handleChangeEditSectionName }) => {
   const [editSubSection, setEditSubSection] = useState(null);
   const [confirmationModal, setConfirmationModal] = useState(null);
 
-  const handleDeleteSection = (sectionId) => {};
+  const handleDeleteSection = async (sectionId) => {
+    const result = await deleteSection({
+      sectionId,
+      courseid: course._id,
+      token,
+    });
 
-  const handleDeleteSubSection = (subSectionId, sectionId) => {};
+    if (result) {
+      dispatch(setCourse(result));
+    }
+    setConfirmationModal(null);
+  };
+
+  const handleDeleteSubSection = async (subSectionId, sectionId) => {
+    const result = await deleteSubSection({
+      subSectionId,
+      sectionId,
+      token,
+    });
+    if (result) {
+      // TODO: extra code
+      dispatch(setCourse(result));
+    }
+    setConfirmationModal(null);
+  };
 
   return (
     <div>
@@ -59,8 +88,9 @@ const NestedView = ({ handleChangeEditSectionName }) => {
                 <BiSolidDownArrow />
               </div>
             </summary>
+
             <div>
-              {section?.subSection.map((data) => (
+              {section?.subSection?.map((data) => (
                 <div
                   key={data?._id}
                   onClick={() => setViewSubSection(data)}
@@ -100,7 +130,7 @@ const NestedView = ({ handleChangeEditSectionName }) => {
                 </div>
               ))}
               <button
-                onClick={setAddSubSection(section._id)}
+                onClick={ () => setAddSubSection(section._id)}
                 className="mt-4 flex items-center gap-x-2 text-yellow-50"
               >
                 <AiOutlinePlus />
@@ -110,6 +140,34 @@ const NestedView = ({ handleChangeEditSectionName }) => {
           </details>
         ))}
       </div>
+
+      {addSubSection ? (
+        <SubSectionModal
+          modalData={addSubSection}
+          setModalData={setAddSubSection}
+          add={true}
+        />
+      ) : viewSubSection ? (
+        <SubSectionModal
+          modalData={viewSubSection}
+          setModalData={setViewSubSection}
+          view={true}
+        />
+      ) : editSubSection ? (
+        <SubSectionModal
+          modalData={editSubSection}
+          setModalData={setEditSubSection}
+          edit={true}
+        />
+      ) : (
+        <div></div>
+      )}
+
+      {confirmationModal ? (
+        <ConfirmationModal modalData={confirmationModal} />
+      ) : (
+        <div></div>
+      )}
     </div>
   );
 };
